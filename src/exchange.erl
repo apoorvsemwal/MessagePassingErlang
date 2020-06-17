@@ -32,26 +32,27 @@ initiateMasterProcess(callsData) ->
   handleIncomingMessages().
 
 
-print_calls_to_be_made([H]) ->
-  io:format("~p: ~p~n",[element(1, H), element(2, H)]);
-print_calls_to_be_made([H|T]) ->
-  io:format("~p: ~p~n",[element(1, H), element(2, H)]),
-  [print_calls_to_be_made(T)];
+print_calls_to_be_made([senderWithReceivers]) ->
+  io:format("~p: ~p~n",[element(1, senderWithReceivers), element(2, senderWithReceivers)]);
+print_calls_to_be_made([senderWithReceivers|remainingSendersWithReceivers]) ->
+  io:format("~p: ~p~n",[element(1, senderWithReceivers), element(2, senderWithReceivers)]),
+  [print_calls_to_be_made(remainingSendersWithReceivers)];
 print_calls_to_be_made([])-> ok.
 
 
-createSlaveProcesses([H|T]) ->
-  personName = element(1, H),
+createSlaveProcesses([senderWithReceivers|remainingSendersWithReceivers]) ->
+  personName = element(1, senderWithReceivers),
   register(personName, spawn(calling, personProcessHandler, [personName])),
-  createSlaveProcesses(T).
+  createSlaveProcesses(remainingSendersWithReceivers);
+createSlaveProcesses([])-> ok.
 
 
 handleIncomingMessages()->
   receive
-    {intro, sender, receiver, timeStamp} ->
+    {introMsg, sender, receiver, timeStamp} ->
       io:fwrite("~p received intro message from ~p [~p]~n",[sender, receiver, timeStamp]),
       handleIncomingMessages();
-    {reply, sender, receiver, timeStamp} ->
+    {replyMsg, sender, receiver, timeStamp} ->
       io:fwrite("~p received reply message from ~p [~p]~n",[sender, receiver, timeStamp]),
       handleIncomingMessages()
   after 10000 ->
@@ -59,5 +60,18 @@ handleIncomingMessages()->
   end.
 
 
-triggerMessageExchange()->
-  io:format("Pending").
+triggerMessageExchange([senderWithReceivers|remainingSendersWithReceivers])->
+  personName = element(1, senderWithReceivers),
+  personProcessId = whereis(personName),
+  if
+    personProcessId /= undefined ->
+      sendIntroMessage(element(2, senderWithReceivers), personProcessId)
+  end,
+  triggerMessageExchange(remainingSendersWithReceivers);
+triggerMessageExchange([])-> ok.
+
+
+sendIntroMessage([receiver|restReceivers], personProcessId) ->
+  personProcessId ! {triggerIntroMsg, receiver},
+  sendIntroMessage(restReceivers, personProcessId);
+sendIntroMessage([], personProcessId) -> ok.
