@@ -13,36 +13,23 @@
 -export([start/0]).
 
 start() ->
-  {ok, CallsData} = file:consult("calls.txt"),
+  {ok, callsData} = file:consult("calls.txt"),
+  createMasterProcess(callsData),
+  triggerMessageExchange(callsData).
+
+
+createMasterProcess(callsData) ->
+  process_flag(trap_exit, true),
+  masterPID = spawn(fun() -> initiateMasterProcess(callsData) end),
+  register(master, masterPID),
+  ok.
+
+
+initiateMasterProcess(callsData) ->
   io:format("** Calls to be made **~n"),
-  print_calls_to_be_made(CallsData),
-  numberOfPeopleProcesses = length(CallsData),
-  initiateMasterProcess(numberOfPeopleProcesses).
-
-
-initiateMasterProcess(numberOfPeopleProcesses) ->
-  io:format("Master process: started~n", []),
-  peopleProcessIdList = [spawn_link(fun() -> calling:initiatePersonProcess(personNumber) end) || personNumber <- lists:seq(1, numberOfPeopleProcesses)],
-  master_loop(peopleProcessIdList).
-
-
-master_loop(SlavePids) ->
-  receive
-    die ->
-      io:format("master: received die~n"),
-      lists:foreach(fun(SlavePid) -> SlavePid ! die end, SlavePids);
-    {to_slave, Message, SlaveNr} ->
-      io:format("master: forward ~p to slave ~p~n", [Message, SlaveNr]),
-      SlavePid = lists:nth(SlaveNr, SlavePids),
-      SlavePid ! Message,
-      master_loop(SlavePids);
-    {'EXIT', SlavePid, _Reason} ->
-      SlaveNr = slave_pid_to_nr(SlavePid, SlavePids),
-      io:format("master: slave ~p died~n", [SlaveNr]),
-      NewSlavePid = spawn_link(fun() -> slave_start(SlaveNr) end),
-      NewSlavePids = slave_change_pid(SlavePid, NewSlavePid, SlavePids),
-      master_loop(NewSlavePids)
-  end.
+  print_calls_to_be_made(callsData),
+  createSlaveProcesses(callsData),
+  handleIncomingMessages().
 
 
 print_calls_to_be_made([H]) ->
@@ -51,3 +38,26 @@ print_calls_to_be_made([H|T]) ->
   io:format("~p: ~p~n",[element(1, H), element(2, H)]),
   [print_calls_to_be_made(T)];
 print_calls_to_be_made([])-> ok.
+
+
+createSlaveProcesses([H|T]) ->
+  personName = element(1, H),
+  register(personName, spawn(calling, personProcessHandler, [personName])),
+  createSlaveProcesses(T).
+
+
+handleIncomingMessages()->
+  receive
+    {intro, sender, receiver, timeStamp} ->
+      io:fwrite("~p received intro message from ~p [~p]~n",[sender, receiver, timeStamp]),
+      handleIncomingMessages();
+    {reply, sender, receiver, timeStamp} ->
+      io:fwrite("~p received reply message from ~p [~p]~n",[sender, receiver, timeStamp]),
+      handleIncomingMessages()
+  after 10000 ->
+    io:fwrite("~nMaster has received no replies for 10 seconds, ending...~n")
+  end.
+
+
+triggerMessageExchange()->
+  io:format("Pending").

@@ -10,16 +10,7 @@
 -author("Apoorv").
 
 %% API
--export([initiatePersonProcess/1]).
+-export([personProcessHandler/1]).
 
-initiatePersonProcess(personNumber) ->
-  receiveMessageFromMaster(personNumber).
-
-receiveMessageFromMaster(personNumber) ->
-  receive
-    die ->
-      io:format("slave ~p: received die~n", [SlaveNr]);
-    Message ->
-      io:format("slave ~p: received ~p~n", [SlaveNr, Message]),
-      slave_loop(SlaveNr)
-  end.
+personProcessHandler(personNumber) ->
+  io:format("Pending").
