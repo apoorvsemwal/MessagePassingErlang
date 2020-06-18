@@ -47,10 +47,10 @@ createSlaveProcesses([])-> ok.
 handleIncomingMessages()->
   receive
     {introMsg, SenderName, ReceiverName, MicroSecComponentTimestamp} ->
-      io:fwrite("~p received intro message from ~p [~p]~n",[SenderName, ReceiverName, MicroSecComponentTimestamp]),
+      io:fwrite("~p received intro message from ~p [~p]~n",[ReceiverName, SenderName, MicroSecComponentTimestamp]),
       handleIncomingMessages();
     {replyMsg, SenderName, ReceiverName, MicroSecComponentTimestamp} ->
-      io:fwrite("~p received reply message from ~p [~p]~n",[SenderName, ReceiverName, MicroSecComponentTimestamp]),
+      io:fwrite("~p received reply message from ~p [~p]~n",[ReceiverName, SenderName, MicroSecComponentTimestamp]),
       handleIncomingMessages()
   after 10000 ->
     io:fwrite("~nMaster has received no replies for 10 seconds, ending...~n")

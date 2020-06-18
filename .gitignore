@@ -10,3 +10,6 @@
 /MessagePassingErlang.iml
 /out/production/MessagePassingErlang/calling.beam
 /out/test/MessagePassingErlang/calling.beam
+/.idea/rebar.xml
+/src/calling.beam
+/src/exchange.beam
