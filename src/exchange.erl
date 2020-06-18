@@ -12,6 +12,7 @@
 %% API
 -export([start/0]).
 
+
 start() ->
   {ok, CallsData} = file:consult("calls.txt"),
   createMasterProcess(CallsData),
@@ -19,17 +20,13 @@ start() ->
 
 
 createMasterProcess(CallsData) ->
-  process_flag(trap_exit, true),
-  MasterPID = spawn(fun() -> initiateMasterProcess(CallsData) end),
-  register(master, MasterPID),
-  ok.
-
-
-initiateMasterProcess(CallsData) ->
   io:format("** Calls to be made **~n"),
   print_calls_to_be_made(CallsData),
+  io:format("~n~n"),
   createSlaveProcesses(CallsData),
-  handleIncomingMessages().
+  MasterPID = spawn(fun() -> handleIncomingMessages() end),
+  register(master, MasterPID),
+  ok.
 
 
 print_calls_to_be_made([SenderWithReceivers]) ->
@@ -65,7 +62,9 @@ triggerMessageExchange([SenderWithReceivers|RemainingSendersWithReceivers])->
   PersonProcessId = whereis(PersonName),
   if
     PersonProcessId /= undefined ->
-      sendIntroMessage(element(2, SenderWithReceivers), PersonProcessId)
+      sendIntroMessage(element(2, SenderWithReceivers), PersonProcessId);
+    true ->
+      io:fwrite("~nUndefined Person ~p!!!~n",[PersonName])
   end,
   triggerMessageExchange(RemainingSendersWithReceivers);
 triggerMessageExchange([])-> ok.
