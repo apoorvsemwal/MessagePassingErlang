@@ -8,3 +8,5 @@
 /.idea/vcs.xml
 /erl_crash.dump
 /MessagePassingErlang.iml
+/out/production/MessagePassingErlang/calling.beam
+/out/test/MessagePassingErlang/calling.beam

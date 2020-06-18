@@ -13,65 +13,65 @@
 -export([start/0]).
 
 start() ->
-  {ok, callsData} = file:consult("calls.txt"),
-  createMasterProcess(callsData),
-  triggerMessageExchange(callsData).
+  {ok, CallsData} = file:consult("calls.txt"),
+  createMasterProcess(CallsData),
+  triggerMessageExchange(CallsData).
 
 
-createMasterProcess(callsData) ->
+createMasterProcess(CallsData) ->
   process_flag(trap_exit, true),
-  masterPID = spawn(fun() -> initiateMasterProcess(callsData) end),
-  register(master, masterPID),
+  MasterPID = spawn(fun() -> initiateMasterProcess(CallsData) end),
+  register(master, MasterPID),
   ok.
 
 
-initiateMasterProcess(callsData) ->
+initiateMasterProcess(CallsData) ->
   io:format("** Calls to be made **~n"),
-  print_calls_to_be_made(callsData),
-  createSlaveProcesses(callsData),
+  print_calls_to_be_made(CallsData),
+  createSlaveProcesses(CallsData),
   handleIncomingMessages().
 
 
-print_calls_to_be_made([senderWithReceivers]) ->
-  io:format("~p: ~p~n",[element(1, senderWithReceivers), element(2, senderWithReceivers)]);
-print_calls_to_be_made([senderWithReceivers|remainingSendersWithReceivers]) ->
-  io:format("~p: ~p~n",[element(1, senderWithReceivers), element(2, senderWithReceivers)]),
-  [print_calls_to_be_made(remainingSendersWithReceivers)];
+print_calls_to_be_made([SenderWithReceivers]) ->
+  io:format("~p: ~p~n",[element(1, SenderWithReceivers), element(2, SenderWithReceivers)]);
+print_calls_to_be_made([SenderWithReceivers|RemainingSendersWithReceivers]) ->
+  io:format("~p: ~p~n",[element(1, SenderWithReceivers), element(2, SenderWithReceivers)]),
+  [print_calls_to_be_made(RemainingSendersWithReceivers)];
 print_calls_to_be_made([])-> ok.
 
 
-createSlaveProcesses([senderWithReceivers|remainingSendersWithReceivers]) ->
-  personName = element(1, senderWithReceivers),
-  register(personName, spawn(calling, personProcessHandler, [personName])),
-  createSlaveProcesses(remainingSendersWithReceivers);
+createSlaveProcesses([SenderWithReceivers|RemainingSendersWithReceivers]) ->
+  PersonName = element(1, SenderWithReceivers),
+  register(PersonName, spawn(calling, personProcessHandler, [PersonName])),
+  createSlaveProcesses(RemainingSendersWithReceivers);
 createSlaveProcesses([])-> ok.
 
 
 handleIncomingMessages()->
   receive
-    {introMsg, sender, receiver, timeStamp} ->
-      io:fwrite("~p received intro message from ~p [~p]~n",[sender, receiver, timeStamp]),
+    {introMsg, SenderName, ReceiverName, MicroSecComponentTimestamp} ->
+      io:fwrite("~p received intro message from ~p [~p]~n",[SenderName, ReceiverName, MicroSecComponentTimestamp]),
       handleIncomingMessages();
-    {replyMsg, sender, receiver, timeStamp} ->
-      io:fwrite("~p received reply message from ~p [~p]~n",[sender, receiver, timeStamp]),
+    {replyMsg, SenderName, ReceiverName, MicroSecComponentTimestamp} ->
+      io:fwrite("~p received reply message from ~p [~p]~n",[SenderName, ReceiverName, MicroSecComponentTimestamp]),
       handleIncomingMessages()
   after 10000 ->
     io:fwrite("~nMaster has received no replies for 10 seconds, ending...~n")
   end.
 
 
-triggerMessageExchange([senderWithReceivers|remainingSendersWithReceivers])->
-  personName = element(1, senderWithReceivers),
-  personProcessId = whereis(personName),
+triggerMessageExchange([SenderWithReceivers|RemainingSendersWithReceivers])->
+  PersonName = element(1, SenderWithReceivers),
+  PersonProcessId = whereis(PersonName),
   if
-    personProcessId /= undefined ->
-      sendIntroMessage(element(2, senderWithReceivers), personProcessId)
+    PersonProcessId /= undefined ->
+      sendIntroMessage(element(2, SenderWithReceivers), PersonProcessId)
   end,
-  triggerMessageExchange(remainingSendersWithReceivers);
+  triggerMessageExchange(RemainingSendersWithReceivers);
 triggerMessageExchange([])-> ok.
 
 
-sendIntroMessage([receiver|restReceivers], personProcessId) ->
-  personProcessId ! {triggerIntroMsg, receiver},
-  sendIntroMessage(restReceivers, personProcessId);
-sendIntroMessage([], personProcessId) -> ok.
+sendIntroMessage([Receiver|RemainingReceivers], PersonProcessId) ->
+  PersonProcessId ! {triggerIntroMsg, Receiver},
+  sendIntroMessage(RemainingReceivers, PersonProcessId);
+sendIntroMessage([], PersonProcessId) -> ok.

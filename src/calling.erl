@@ -12,32 +12,32 @@
 %% API
 -export([personProcessHandler/1]).
 
-personProcessHandler(personProcessName) ->
+personProcessHandler(PersonProcessName) ->
 
   receive
 
-    {triggerIntroMsg, receiver} ->
-      receiverPID = whereis(receiver),
+    {triggerIntroMsg, Receiver} ->
+      ReceiverPID = whereis(Receiver),
       timer:sleep(random:uniform(100)),
-      receiverPID ! {introMsg, self(), personProcessName},
-      personProcessHandler(personProcessName);
+      ReceiverPID ! {introMsg, self(), PersonProcessName},
+      personProcessHandler(PersonProcessName);
 
-    {introMsg, senderPID, senderName} ->
-      {_, _, microSecComponentTimestamp} = now(),
-      displayMessageUsingMaster(introMsg, senderName, personProcessName, microSecComponentTimestamp),
-      senderPID ! {replyMsg, personProcessName, microSecComponentTimestamp},
-      personProcessHandler(personProcessName);
+    {introMsg, SenderPID, SenderName} ->
+      {_, _, MicroSecComponentTimestamp} = now(),
+      displayMessageUsingMaster(introMsg, SenderName, PersonProcessName, MicroSecComponentTimestamp),
+      SenderPID ! {replyMsg, PersonProcessName, MicroSecComponentTimestamp},
+      personProcessHandler(PersonProcessName);
 
-    {replyMsg, senderName, microSecComponentTimestamp} ->
-      displayMessageUsingMaster(replyMsg, senderName, personProcessName, microSecComponentTimestamp),
-      personProcessHandler(personProcessName)
+    {replyMsg, SenderName, MicroSecComponentTimestamp} ->
+      displayMessageUsingMaster(replyMsg, SenderName, PersonProcessName, MicroSecComponentTimestamp),
+      personProcessHandler(PersonProcessName)
 
   after 5000 ->
-    io:fwrite("~nProcess ~p has received no replies for 5 seconds, ending...~n", [personName])
+    io:fwrite("~nProcess ~p has received no replies for 5 seconds, ending...~n", [PersonProcessName])
   end.
 
 
-displayMessageUsingMaster(msgTyp, senderName, receiverName, microSecComponentTimestamp) ->
-  masterPID = whereis(master),
+displayMessageUsingMaster(MsgTyp, SenderName, ReceiverName, MicroSecComponentTimestamp) ->
+  MasterPID = whereis(master),
   timer:sleep(random:uniform(100)),
-  masterPID ! {msgTyp, senderName, receiverName, microSecComponentTimestamp}.
+  MasterPID ! {MsgTyp, SenderName, ReceiverName, MicroSecComponentTimestamp}.
