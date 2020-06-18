@@ -15,18 +15,18 @@
 
 start() ->
   {ok, CallsData} = file:consult("calls.txt"),
-  createMasterProcess(CallsData),
-  triggerMessageExchange(CallsData).
+  createMasterProcess(CallsData).
+
 
 
 createMasterProcess(CallsData) ->
+  register(master, self()),
   io:format("** Calls to be made **~n"),
   print_calls_to_be_made(CallsData),
   io:format("~n~n"),
   createSlaveProcesses(CallsData),
-  MasterPID = spawn(fun() -> handleIncomingMessages() end),
-  register(master, MasterPID),
-  ok.
+  triggerMessageExchange(CallsData),
+  handleIncomingMessages().
 
 
 print_calls_to_be_made([SenderWithReceivers]) ->
