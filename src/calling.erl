@@ -17,11 +17,13 @@ personProcessHandler(PersonProcessName) ->
   receive
     {triggerIntroMsg, Receiver} ->
       ReceiverPID = whereis(Receiver),
+      timer:sleep(random:uniform(100)),
       ReceiverPID ! {introMsg, self(), PersonProcessName},
       personProcessHandler(PersonProcessName);
     {introMsg, SenderPID, SenderName} ->
       {_, _, MicroSecComponentTimestamp} = now(),
       displayMessageUsingMaster(introMsg, SenderName, PersonProcessName, MicroSecComponentTimestamp),
+      timer:sleep(random:uniform(100)),
       SenderPID ! {replyMsg, PersonProcessName, MicroSecComponentTimestamp},
       personProcessHandler(PersonProcessName);
     {replyMsg, SenderName, MicroSecComponentTimestamp} ->
@@ -34,5 +36,4 @@ personProcessHandler(PersonProcessName) ->
 
 displayMessageUsingMaster(MsgTyp, SenderName, ReceiverName, MicroSecComponentTimestamp) ->
   MasterPID = whereis(master),
-  timer:sleep(random:uniform(100)),
   MasterPID ! {MsgTyp, SenderName, ReceiverName, MicroSecComponentTimestamp}.

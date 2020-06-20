@@ -23,7 +23,7 @@ createMasterProcess(CallsData) ->
   register(master, self()),
   io:format("** Calls to be made **~n"),
   print_calls_to_be_made(CallsData),
-  io:format("~n~n"),
+  io:format("~n"),
   createSlaveProcesses(CallsData),
   triggerMessageExchange(CallsData),
   handleIncomingMessages().
