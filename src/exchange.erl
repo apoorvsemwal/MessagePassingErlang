@@ -73,4 +73,4 @@ triggerMessageExchange([]) -> ok.
 sendIntroMessage([Receiver | RemainingReceivers], PersonProcessId) ->
   PersonProcessId ! {triggerIntroMsg, Receiver},
   sendIntroMessage(RemainingReceivers, PersonProcessId);
-sendIntroMessage([], PersonProcessId) -> ok.
+sendIntroMessage([], PersonProcessId) -> PersonProcessId.
