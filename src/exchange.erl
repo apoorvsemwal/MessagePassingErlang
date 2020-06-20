@@ -18,7 +18,6 @@ start() ->
   createMasterProcess(CallsData).
 
 
-
 createMasterProcess(CallsData) ->
   register(master, self()),
   io:format("** Calls to be made **~n"),
@@ -53,7 +52,9 @@ handleIncomingMessages() ->
       io:fwrite("~p received reply message from ~p [~p]~n", [ReceiverName, SenderName, MicroSecComponentTimestamp]),
       handleIncomingMessages()
   after 10000 ->
-    io:fwrite("~nMaster has received no replies for 10 seconds, ending...~n")
+    io:fwrite("~nMaster has received no replies for 10 seconds, ending...~n"),
+    unregister(master),
+    ok
   end.
 
 
